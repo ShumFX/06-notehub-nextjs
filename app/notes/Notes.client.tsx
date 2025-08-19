@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
-import { fetchNotes } from '../../lib/api';
+import { fetchNotes, type FetchNotesResponse } from '../../lib/api';
 import NoteList from '../../components/NoteList/NoteList';
 import SearchBox from '../../components/SearchBox/SearchBox';
 import Pagination from '../../components/Pagination/Pagination';
@@ -30,7 +30,7 @@ const NotesClient: React.FC = () => {
       perPage,
       search: debouncedSearchQuery.trim() || undefined 
     }),
-    placeholderData: (previousData: any) => previousData,
+    placeholderData: (previousData: FetchNotesResponse | undefined) => previousData,
   });
 
   const handlePageChange = (selectedPage: number) => {
