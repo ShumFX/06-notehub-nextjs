@@ -30,7 +30,7 @@ const NotesClient: React.FC = () => {
       perPage,
       search: debouncedSearchQuery.trim() || undefined 
     }),
-    placeholderData: (previousData) => previousData,
+    placeholderData: (previousData: any) => previousData,
   });
 
   const handlePageChange = (selectedPage: number) => {
