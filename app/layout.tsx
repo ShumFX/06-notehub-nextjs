@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import TanStackProvider from "../components/TanStackProvider/TanStackProvider";
+import dynamic from "next/dynamic";
 import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
 import "./globals.css";
@@ -14,6 +14,12 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+// Динамический импорт TanStackProvider с отключением SSR
+const TanStackProvider = dynamic(
+  () => import("../components/TanStackProvider/TanStackProvider"),
+  { ssr: false }
+);
 
 export const metadata: Metadata = {
   title: "NoteHub - Manage Your Notes",
