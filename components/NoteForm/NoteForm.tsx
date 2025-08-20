@@ -5,30 +5,28 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Yup from 'yup';
 import { createNote } from '../../lib/api';
-import type { CreateNotePayload } from '../../types/note';
-import type { NoteTag } from '../../types/note';
+import type { CreateNotePayload, NoteTag, Note } from '../../types/note';
 import css from './NoteForm.module.css';
 
 interface NoteFormProps {
   onCancel: () => void;
 }
 
+const NOTE_TAGS: NoteTag[] = ['Todo', 'Work', 'Personal', 'Meeting', 'Shopping'];
+
 const validationSchema = Yup.object({
   title: Yup.string()
     .min(3, 'Title must be at least 3 characters')
     .max(50, 'Title must be at most 50 characters')
     .required('Title is required'),
-  content: Yup.string()
-    .max(500, 'Content must be at most 500 characters'),
-  tag: Yup.string()
-    .oneOf(['Todo', 'Work', 'Personal', 'Meeting', 'Shopping'], 'Invalid tag')
-    .required('Tag is required'),
+  content: Yup.string().max(500, 'Content must be at most 500 characters'),
+  tag: Yup.mixed<NoteTag>().oneOf(NOTE_TAGS, 'Invalid tag').required('Tag is required'),
 });
 
 const initialValues: CreateNotePayload = {
   title: '',
   content: '',
-  tag: 'Todo' as NoteTag,
+  tag: 'Todo',
 };
 
 const NoteForm: React.FC<NoteFormProps> = ({ onCancel }) => {
@@ -36,24 +34,39 @@ const NoteForm: React.FC<NoteFormProps> = ({ onCancel }) => {
 
   const createNoteMutation = useMutation({
     mutationFn: createNote,
+    onMutate: async (newNote) => {
+      // отмена текущих запросов
+      await queryClient.cancelQueries({ queryKey: ['notes'] });
+
+      // optimistic update
+      const prevNotes = queryClient.getQueryData<Note[]>(['notes', 1, '']);
+      if (prevNotes) {
+        queryClient.setQueryData(['notes', 1, ''], [...prevNotes, { id: Date.now(), ...newNote }]);
+      }
+      return { prevNotes };
+    },
+    onError: (_err, _newNote, context) => {
+      if (context?.prevNotes) {
+        queryClient.setQueryData(['notes', 1, ''], context.prevNotes);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
-      onCancel(); // Закрываем модальное окно после успешного создания
     },
   });
-
-  const handleSubmit = (values: CreateNotePayload) => {
-    createNoteMutation.mutate(values);
-  };
 
   return (
     <Formik
       initialValues={initialValues}
       validationSchema={validationSchema}
-      onSubmit={handleSubmit}
+      onSubmit={async (values, { resetForm }) => {
+        await createNoteMutation.mutateAsync(values);
+        resetForm();
+        onCancel();
+      }}
     >
-      {({ isValid, dirty }) => (
-        <Form className={css.form}>
+      {({ isValid, dirty, isSubmitting }) => (
+        <Form className={css.form} aria-busy={createNoteMutation.isPending}>
           <div className={css.formGroup}>
             <label htmlFor="title">Title</label>
             <Field
@@ -61,6 +74,8 @@ const NoteForm: React.FC<NoteFormProps> = ({ onCancel }) => {
               type="text"
               name="title"
               className={css.input}
+              aria-invalid={!isValid}
+              autoFocus
             />
             <ErrorMessage name="title" component="span" className={css.error} />
           </div>
@@ -73,6 +88,7 @@ const NoteForm: React.FC<NoteFormProps> = ({ onCancel }) => {
               name="content"
               rows={8}
               className={css.textarea}
+              aria-invalid={!isValid}
             />
             <ErrorMessage name="content" component="span" className={css.error} />
           </div>
@@ -80,21 +96,29 @@ const NoteForm: React.FC<NoteFormProps> = ({ onCancel }) => {
           <div className={css.formGroup}>
             <label htmlFor="tag">Tag</label>
             <Field as="select" id="tag" name="tag" className={css.select}>
-              <option value="Todo">Todo</option>
-              <option value="Work">Work</option>
-              <option value="Personal">Personal</option>
-              <option value="Meeting">Meeting</option>
-              <option value="Shopping">Shopping</option>
+              {NOTE_TAGS.map(tag => (
+                <option key={tag} value={tag}>
+                  {tag}
+                </option>
+              ))}
             </Field>
             <ErrorMessage name="tag" component="span" className={css.error} />
           </div>
 
+          {createNoteMutation.isError && (
+            <div className={css.error}>
+              {createNoteMutation.error instanceof Error
+                ? createNoteMutation.error.message
+                : 'Failed to create note'}
+            </div>
+          )}
+
           <div className={css.actions}>
-            <button 
-              type="button" 
+            <button
+              type="button"
               className={css.cancelButton}
               onClick={onCancel}
-              disabled={createNoteMutation.isPending}
+              disabled={isSubmitting || createNoteMutation.isPending}
             >
               Cancel
             </button>
@@ -113,3 +137,4 @@ const NoteForm: React.FC<NoteFormProps> = ({ onCancel }) => {
 };
 
 export default NoteForm;
+
