@@ -6,10 +6,12 @@ const token = process.env.NEXT_PUBLIC_NOTEHUB_TOKEN;
 
 const api = axios.create({
   baseURL: BASE_URL,
-  headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  },
+  headers: token
+    ? {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      }
+    : { 'Content-Type': 'application/json' },
 });
 
 export interface FetchNotesParams {
@@ -38,16 +40,18 @@ export interface FetchNoteByIdResponse {
   note: Note;
 }
 
-export const fetchNotes = async (params: FetchNotesParams = {}): Promise<FetchNotesResponse> => {
+export const fetchNotes = async (
+  params: FetchNotesParams = {}
+): Promise<FetchNotesResponse> => {
   const { page = 1, perPage = 12, search } = params;
-  
+
   const queryParams = new URLSearchParams({
     page: page.toString(),
     perPage: perPage.toString(),
   });
 
-  if (search && search.trim() !== '') {
-    queryParams.append('search', search);
+  if (search?.trim()) {
+    queryParams.append('search', search.trim());
   }
 
   const response: AxiosResponse<FetchNotesResponse> = await api.get(
@@ -70,4 +74,12 @@ export const createNote = async (payload: CreateNotePayload): Promise<Note> => {
 export const deleteNote = async (id: string): Promise<Note> => {
   const response: AxiosResponse<DeleteNoteResponse> = await api.delete(`/notes/${id}`);
   return response.data.note;
+};
+
+// удобный общий экспорт
+export const apiClient = {
+  fetchNotes,
+  fetchNoteById,
+  createNote,
+  deleteNote,
 };

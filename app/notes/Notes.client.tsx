@@ -11,13 +11,13 @@ import Modal from '../../components/Modal/Modal';
 import NoteForm from '../../components/NoteForm/NoteForm';
 import css from './Notes.module.css';
 
+const PER_PAGE = 12;
+
 const NotesClient: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const perPage = 12;
 
   const {
     data: notesData,
@@ -25,34 +25,27 @@ const NotesClient: React.FC = () => {
     isError,
   } = useQuery({
     queryKey: ['notes', currentPage, debouncedSearchQuery],
-    queryFn: () => fetchNotes({ 
-      page: currentPage, 
-      perPage,
-      search: debouncedSearchQuery.trim() || undefined 
-    }),
+    queryFn: () =>
+      fetchNotes({
+        page: currentPage,
+        perPage: PER_PAGE,
+        search: debouncedSearchQuery.trim() || undefined,
+      }),
     placeholderData: (previousData: FetchNotesResponse | undefined) => previousData,
+    keepPreviousData: true, // плавніший перехід між сторінками
   });
 
   const handlePageChange = (selectedPage: number) => {
-    setCurrentPage(selectedPage + 1); // react-paginate uses 0-based indexing
+    setCurrentPage(selectedPage + 1); // react-paginate -> 0-based
   };
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
-    setCurrentPage(1); // Reset to first page when searching
+    setCurrentPage(1); // пошук завжди починається з першої сторінки
   };
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
-
-  const notes = notesData?.notes || [];
-  const totalPages = notesData?.totalPages || 0;
-  const hasNotes = notes.length > 0;
+  const notes = notesData?.notes ?? [];
+  const totalPages = notesData?.totalPages ?? 0;
   const shouldShowPagination = totalPages > 1;
 
   if (isLoading) {
@@ -66,34 +59,30 @@ const NotesClient: React.FC = () => {
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
-        <SearchBox 
-          value={searchQuery}
-          onChange={handleSearchChange}
-        />
-        
+        <SearchBox value={searchQuery} onChange={handleSearchChange} />
+
         {shouldShowPagination && (
           <Pagination
             pageCount={totalPages}
-            currentPage={currentPage - 1} // react-paginate uses 0-based indexing
+            currentPage={currentPage - 1}
             onPageChange={handlePageChange}
           />
         )}
 
-        <button 
-          className={css.button}
-          onClick={handleOpenModal}
-        >
-          Create note +
+        <button className={css.button} onClick={() => setIsModalOpen(true)}>
+          + Create note
         </button>
       </header>
 
-      {hasNotes && (
+      {notes.length > 0 ? (
         <NoteList notes={notes} />
+      ) : (
+        <div className={css.empty}>No notes found. Try another search.</div>
       )}
 
       {isModalOpen && (
-        <Modal onClose={handleCloseModal}>
-          <NoteForm onCancel={handleCloseModal} />
+        <Modal onClose={() => setIsModalOpen(false)}>
+          <NoteForm onCancel={() => setIsModalOpen(false)} />
         </Modal>
       )}
     </div>
