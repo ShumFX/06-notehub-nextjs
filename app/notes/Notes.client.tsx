@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
 import { fetchNotes, type FetchNotesResponse } from '../../lib/api';
@@ -19,11 +19,7 @@ const NotesClient: React.FC = () => {
   const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const {
-    data: notesData,
-    isLoading,
-    isError,
-  } = useQuery({
+  const { data, isLoading, isError } = useQuery<FetchNotesResponse>({
     queryKey: ['notes', currentPage, debouncedSearchQuery],
     queryFn: () =>
       fetchNotes({
@@ -31,21 +27,23 @@ const NotesClient: React.FC = () => {
         perPage: PER_PAGE,
         search: debouncedSearchQuery.trim() || undefined,
       }),
-    placeholderData: (previousData: FetchNotesResponse | undefined) => previousData,
-    keepPreviousData: true, // плавніший перехід між сторінками
+    keepPreviousData: true,
+    placeholderData: (prev) => prev,
   });
 
-  const handlePageChange = (selectedPage: number) => {
+  // Handlers
+  const handlePageChange = useCallback((selectedPage: number) => {
     setCurrentPage(selectedPage + 1); // react-paginate -> 0-based
-  };
+  }, []);
 
-  const handleSearchChange = (query: string) => {
+  const handleSearchChange = useCallback((query: string) => {
     setSearchQuery(query);
-    setCurrentPage(1); // пошук завжди починається з першої сторінки
-  };
+    setCurrentPage(1);
+  }, []);
 
-  const notes = notesData?.notes ?? [];
-  const totalPages = notesData?.totalPages ?? 0;
+  // Derived values
+  const notes = useMemo(() => data?.notes ?? [], [data]);
+  const totalPages = useMemo(() => data?.totalPages ?? 0, [data]);
   const shouldShowPagination = totalPages > 1;
 
   if (isLoading) {
@@ -90,3 +88,4 @@ const NotesClient: React.FC = () => {
 };
 
 export default NotesClient;
+
