@@ -8,10 +8,9 @@ export default function NotesError({
   reset: () => void;
 }) {
   return (
-    <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <h2>Ошибка при загрузке заметок 📒</h2>
-      <p>{error.message}</p>
-      <button onClick={() => reset()}>Попробовать снова</button>
+    <div>
+      <p>Could not fetch the list of notes. {error.message}</p>
+      <button onClick={reset}>Try again</button>
     </div>
   );
 }

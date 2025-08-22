@@ -2,18 +2,18 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
-import { fetchNoteById } from '../../../lib/api';
+import { fetchNoteById } from '@/lib/api';
 import css from './NoteDetails.module.css';
 
-const NoteDetailsClient: React.FC = () => {
-  const params = useParams();
-  const id = params?.id as string;
+interface NoteDetailsClientProps {
+  id: string;
+}
 
+const NoteDetailsClient: React.FC<NoteDetailsClientProps> = ({ id }) => {
   const {
     data: note,
     isLoading,
-    isError,
+    error,
   } = useQuery({
     queryKey: ['note', id],
     queryFn: () => fetchNoteById(id),
@@ -24,7 +24,7 @@ const NoteDetailsClient: React.FC = () => {
     return <p>Loading, please wait...</p>;
   }
 
-  if (isError || !note) {
+  if (error || !note) {
     return <p>Something went wrong.</p>;
   }
 

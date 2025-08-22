@@ -8,10 +8,9 @@ export default function NoteDetailsError({
   reset: () => void;
 }) {
   return (
-    <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <h2>Ошибка при загрузке заметки 📝</h2>
-      <p>{error.message}</p>
-      <button onClick={() => reset()}>Попробовать снова</button>
+    <div>
+      <p>Could not fetch note details. {error.message}</p>
+      <button onClick={reset}>Try again</button>
     </div>
   );
 }

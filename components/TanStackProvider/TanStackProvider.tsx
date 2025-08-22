@@ -4,8 +4,14 @@ import { ReactNode, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export default function TanStackProvider({ children }: { children: ReactNode }) {
-  // создаём клиент один раз (важно для App Router)
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000, // 1 minute
+        refetchOnWindowFocus: false,
+      },
+    },
+  }));
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -13,5 +19,4 @@ export default function TanStackProvider({ children }: { children: ReactNode }) 
     </QueryClientProvider>
   );
 }
-
 

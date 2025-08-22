@@ -4,12 +4,12 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
 
-import { fetchNotes, type FetchNotesResponse } from '@lib/api';
-import NoteList from '@components/NoteList/NoteList';
-import SearchBox from '@components/SearchBox/SearchBox';
-import Pagination from '@components/Pagination/Pagination';
-import Modal from '@components/Modal/Modal';
-import NoteForm from '@components/NoteForm/NoteForm';
+import { fetchNotes, type FetchNotesResponse } from '@/lib/api';
+import NoteList from '@/components/NoteList/NoteList';
+import SearchBox from '@/components/SearchBox/SearchBox';
+import Pagination from '@/components/Pagination/Pagination';
+import Modal from '@/components/Modal/Modal';
+import NoteForm from '@/components/NoteForm/NoteForm';
 
 import css from './Notes.module.css';
 
@@ -29,7 +29,6 @@ export default function NotesClient() {
         perPage: PER_PAGE,
         search: debouncedSearchQuery.trim() || undefined,
       }),
-    // вместо deprecated keepPreviousData используем placeholderData
     placeholderData: (prev) => prev,
   });
 
@@ -38,13 +37,12 @@ export default function NotesClient() {
   const shouldShowPagination = totalPages > 1;
 
   const handlePageChange = useCallback((selectedPage: number) => {
-    // если компонент пагинации даёт 0-based индекс, приводим:
     setCurrentPage(selectedPage + 1);
   }, []);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value);
-    setCurrentPage(1); // при новом поиске — к первой странице
+    setCurrentPage(1);
   }, []);
 
   const openModal = useCallback(() => setIsModalOpen(true), []);
@@ -70,7 +68,7 @@ export default function NotesClient() {
         {shouldShowPagination && (
           <Pagination
             pageCount={totalPages}
-            currentPage={currentPage - 1} // если компонент ожидает 0-based текущую страницу
+            currentPage={currentPage - 1}
             onPageChange={handlePageChange}
           />
         )}
@@ -88,7 +86,6 @@ export default function NotesClient() {
 
       {isModalOpen && (
         <Modal onClose={closeModal}>
-          {/* NoteForm требует onCancel: передаём closeModal */}
           <NoteForm onCancel={closeModal} />
         </Modal>
       )}
