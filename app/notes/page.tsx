@@ -1,7 +1,6 @@
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
 import { fetchNotes } from '@/lib/api';
 import NotesClient from './Notes.client';
-import css from './page.module.css';
 
 export default async function NotesPage() {
   const queryClient = new QueryClient();
@@ -18,13 +17,8 @@ export default async function NotesPage() {
   }
 
   return (
-    <main className={css.main}>
-      <div className={css.container}>
-        <h1 className={css.title}>Notes</h1>
-        <HydrationBoundary state={dehydrate(queryClient)}>
-          <NotesClient />
-        </HydrationBoundary>
-      </div>
-    </main>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <NotesClient />
+    </HydrationBoundary>
   );
 }

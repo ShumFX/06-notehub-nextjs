@@ -1,8 +1,13 @@
+import Link from 'next/link';
+
 export default function NotFound() {
   return (
     <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <h1>404 - Сторінку не знайдено 🕵️‍♂️</h1>
+      <h2>Not Found</h2>
+      <p>Could not find requested resource</p>
+      <Link href="/" style={{ color: '#007bff', textDecoration: 'underline' }}>
+        Return Home
+      </Link>
     </div>
   );
 }
-

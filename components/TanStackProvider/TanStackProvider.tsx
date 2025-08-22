@@ -3,12 +3,17 @@
 import { ReactNode, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-export default function TanStackProvider({ children }: { children: ReactNode }) {
+interface TanStackProviderProps {
+  children: ReactNode;
+}
+
+export default function TanStackProvider({ children }: TanStackProviderProps) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60 * 1000, // 1 minute
+        staleTime: 5 * 60 * 1000, // 5 minutes
         refetchOnWindowFocus: false,
+        retry: 1,
       },
     },
   }));
