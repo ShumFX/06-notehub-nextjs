@@ -1,24 +1,26 @@
-import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
-import { fetchNotes } from '@/lib/api';
-import NotesClient from './Notes.client';
+import { QueryClient, HydrationBoundary, dehydrate } from "@tanstack/react-query";
+import { fetchNotes } from "@/lib/api";
+import NotesClient from "./Notes.client";
 
-export default async function NotesPage() {
-  const queryClient = new QueryClient();
+type Props = {
+    params: Promise<{ page: number, search: string, perPage: number }>
+};
 
-  // Prefetch первую страницу заметок
-  try {
+export default async function Notes({ params }: Props) {
+    const { page, search, perPage} = await params;
+    const queryClient = new QueryClient();
+
     await queryClient.prefetchQuery({
-      queryKey: ['notes', 1, ''],
-      queryFn: () => fetchNotes({ page: 1, perPage: 12 }),
-    });
-  } catch (error) {
-    // Обработка ошибок prefetch - клиентский компонент покажет состояние ошибки
-    console.error('Failed to prefetch notes:', error);
-  }
-
-  return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <NotesClient />
-    </HydrationBoundary>
-  );
+        queryKey: ["notes", page, search, perPage],
+        queryFn: () => fetchNotes(page, search, perPage),
+        
+      });
+    
+      return (
+        <HydrationBoundary state={dehydrate(queryClient)}>
+          <NotesClient />
+        </HydrationBoundary>
+    );
+    
+    
 }

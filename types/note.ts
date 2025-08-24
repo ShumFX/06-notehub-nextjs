@@ -1,25 +1,11 @@
-
-export type NoteID = string;
-
-
-export type BaseNoteTag = "Todo" | "Work" | "Personal" | "Meeting" | "Shopping";
-
-
-export type NoteTag = BaseNoteTag | (string & {});
-
-
-export interface Note {
-  id: NoteID;
+//Кожен об'єкт типу Note повинен мати такі поля з вказаними типами даних:
+export interface Note { 
+  id: string;
   title: string;
-  content?: string;   
-  tag: NoteTag;
+  content: string;
   createdAt: string;
   updatedAt: string;
-}
-
-
-export interface CreateNotePayload {
-  title: string;
-  content?: string;
   tag: NoteTag;
 }
+// NoteTag може бути лише одним із цих рядків:
+export type NoteTag = "Work" | "Personal" | "Meeting" | "Shopping" | "Todo";
